@@ -24,19 +24,17 @@ echo "[+] Installing WireGuard"
 apt update && apt install -y wireguard iproute2
 
 echo "[+] Writing WireGuard config"
-cat > $WG_CONF << EOF
-[Interface]
-PrivateKey = $PRIVATE_KEY
-Address = $ADDRESS
+printf "[Interface]
+PrivateKey = %s
+Address = %s
 DNS = 1.1.1.1
 
 [Peer]
-PublicKey = $SERVER_PUBLIC_KEY
-Endpoint = $ENDPOINT
+PublicKey = %s
+Endpoint = %s
 AllowedIPs = 0.0.0.0/0
 PersistentKeepalive = 25
-
-EOF
+" "$PRIVATE_KEY" "$ADDRESS" "$SERVER_PUBLIC_KEY" "$ENDPOINT" > $WG_CONF
 
 echo "[+] Enabling IP forwarding and iptables"
 sysctl -w net.ipv4.ip_forward=1
