@@ -40,8 +40,8 @@ EOF
 
 echo "[+] Enabling IP forwarding and iptables"
 sysctl -w net.ipv4.ip_forward=1
-iface=\$(ip route get 1.1.1.1 | grep -oP 'dev \\K\\w+')
-iptables -t nat -A POSTROUTING -s $ALLOWED_IP_SUBNET -o \$iface -j MASQUERADE
+iface=$(ip route get 1.1.1.1 | awk '/dev/ {print $5; exit}')
+iptables -t nat -A POSTROUTING -s $ALLOWED_IP_SUBNET -o $iface -j MASQUERADE
 
 echo "[+] Starting WireGuard"
 systemctl enable wg-quick@wg0
