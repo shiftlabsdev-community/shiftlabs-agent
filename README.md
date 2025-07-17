@@ -1,2 +1,0 @@
-# shiftlabs-agent
-Shiftlabs Agent
