@@ -20,11 +20,18 @@ fi
 
 WG_CONF="/etc/wireguard/wg0.conf"
 
+echo "[+] Removing old WireGuard config"
+systemctl stop wg-quick@wg0 || true
+rm -f /etc/wireguard/wg0.conf
+rm -f /etc/wireguard/*.conf
+ip link delete wg0 2>/dev/null || true
+
 echo "[+] Installing WireGuard"
 apt update && apt install -y wireguard iproute2
 
 echo "[+] Writing WireGuard config"
-echo "[Interface]
+cat > $WG_CONF <<EOF
+[Interface]
 PrivateKey = ${PRIVATE_KEY}
 Address = ${ADDRESS}
 DNS = 1.1.1.1
@@ -34,7 +41,7 @@ PublicKey = ${SERVER_PUBLIC_KEY}
 Endpoint = ${ENDPOINT}
 AllowedIPs = 0.0.0.0/0
 PersistentKeepalive = 25
-" > $WG_CONF
+EOF
 
 echo "[+] Enabling IP forwarding and iptables"
 sysctl -w net.ipv4.ip_forward=1
