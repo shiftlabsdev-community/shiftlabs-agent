@@ -3,7 +3,7 @@ set -e
 
 echo "[+] Stopping existing WireGuard (if any)"
 systemctl stop wg-quick@wg0 || true
-rm -f /etc/wireguard/wg0.conf
+rm -f /etc/wireguard/wg0.conf || true
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -25,10 +25,11 @@ fi
 WG_CONF="/etc/wireguard/wg0.conf"
 
 echo "[+] Installing WireGuard"
-apt update && apt install -y wireguard iproute2
+apt update -qq && apt install -y wireguard iproute2 >/dev/null
 
 echo "[+] Writing WireGuard config"
-echo "[Interface]
+cat > $WG_CONF <<EOF
+[Interface]
 PrivateKey = ${PRIVATE_KEY}
 Address = ${ADDRESS}
 DNS = 1.1.1.1
@@ -36,17 +37,20 @@ DNS = 1.1.1.1
 [Peer]
 PublicKey = ${SERVER_PUBLIC_KEY}
 Endpoint = ${ENDPOINT}
-AllowedIPs = 0.0.0.0/0
+AllowedIPs = ${ALLOWED_IP_SUBNET}
 PersistentKeepalive = 25
-" > $WG_CONF
+EOF
 
-echo "[+] Enabling IP forwarding and iptables"
-sysctl -w net.ipv4.ip_forward=1
+echo "[+] Enabling IP forwarding"
+sysctl -w net.ipv4.ip_forward=1 >/dev/null
+
+echo "[+] Configuring iptables"
 iface=$(ip route get 1.1.1.1 | awk '/dev/ {print $5; exit}')
+iptables -t nat -C POSTROUTING -s $ALLOWED_IP_SUBNET -o $iface -j MASQUERADE 2>/dev/null || \
 iptables -t nat -A POSTROUTING -s $ALLOWED_IP_SUBNET -o $iface -j MASQUERADE
 
 echo "[+] Starting WireGuard"
-systemctl enable wg-quick@wg0
+systemctl enable wg-quick@wg0 >/dev/null
 systemctl start wg-quick@wg0
 
 echo "[+] Done. WireGuard started."
