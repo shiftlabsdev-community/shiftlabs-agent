@@ -2,6 +2,7 @@
 set -e
 
 echo "[+] Stopping existing WireGuard (if any)"
+wg-quick down wg0 || true
 systemctl stop wg-quick@wg0 || true
 rm -f /etc/wireguard/wg0.conf || true
 
@@ -51,6 +52,6 @@ iptables -t nat -A POSTROUTING -s $ALLOWED_IP_SUBNET -o $iface -j MASQUERADE
 
 echo "[+] Starting WireGuard"
 systemctl enable wg-quick@wg0 >/dev/null
-systemctl start wg-quick@wg0
+systemctl restart wg-quick@wg0
 
 echo "[+] Done. WireGuard started."
