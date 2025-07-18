@@ -50,6 +50,9 @@ iface=$(ip route get 1.1.1.1 | awk '/dev/ {print $5; exit}')
 iptables -t nat -C POSTROUTING -s $ALLOWED_IP_SUBNET -o $iface -j MASQUERADE 2>/dev/null || \
 iptables -t nat -A POSTROUTING -s $ALLOWED_IP_SUBNET -o $iface -j MASQUERADE
 
+echo "[+] Cleaning old routes if exist"
+ip route del $ALLOWED_IP_SUBNET dev wg0 2>/dev/null || true
+
 echo "[+] Starting WireGuard"
 systemctl enable wg-quick@wg0 >/dev/null
 systemctl restart wg-quick@wg0
