@@ -34,6 +34,7 @@ cat > $WG_CONF <<EOF
 PrivateKey = ${PRIVATE_KEY}
 Address = ${ADDRESS}
 DNS = 1.1.1.1
+SaveConfig = true
 
 [Peer]
 PublicKey = ${SERVER_PUBLIC_KEY}
