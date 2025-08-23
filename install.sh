@@ -26,10 +26,11 @@ fi
 WG_CONF="/etc/wireguard/wg0.conf"
 
 echo "[+] Installing WireGuard"
-apt update -qq && apt install -y wireguard iproute2 >/dev/null
+export DEBIAN_FRONTEND=noninteractive
+apt update -qq && apt install -y -qq wireguard iproute2 iptables >/dev/null
 
 echo "[+] Writing WireGuard config"
-cat > $WG_CONF <<EOF
+cat > "$WG_CONF" <<EOF
 [Interface]
 PrivateKey = ${PRIVATE_KEY}
 Address = ${ADDRESS}
@@ -46,13 +47,13 @@ EOF
 echo "[+] Enabling IP forwarding"
 sysctl -w net.ipv4.ip_forward=1 >/dev/null
 
-echo "[+] Configuring iptables"
+echo "[+] Configuring iptables MASQUERADE for egress"
 iface=$(ip route get 1.1.1.1 | awk '/dev/ {print $5; exit}')
-iptables -t nat -C POSTROUTING -s $ALLOWED_IP_SUBNET -o $iface -j MASQUERADE 2>/dev/null || \
-iptables -t nat -A POSTROUTING -s $ALLOWED_IP_SUBNET -o $iface -j MASQUERADE
+iptables -t nat -C POSTROUTING -s "$ALLOWED_IP_SUBNET" -o "$iface" -j MASQUERADE 2>/dev/null || \
+iptables -t nat -A POSTROUTING -s "$ALLOWED_IP_SUBNET" -o "$iface" -j MASQUERADE
 
 echo "[+] Cleaning old routes if exist"
-ip route del $ALLOWED_IP_SUBNET dev wg0 2>/dev/null || true
+ip route del "$ALLOWED_IP_SUBNET" dev wg0 2>/dev/null || true
 
 echo "[+] Starting WireGuard"
 systemctl enable wg-quick@wg0 >/dev/null
