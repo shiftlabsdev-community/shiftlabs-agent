@@ -75,7 +75,6 @@ cat > "$WG_CONF" <<EOF
 [Interface]
 PrivateKey = ${PRIVATE_KEY}
 Address = ${ADDRESS}
-DNS = 1.1.1.1
 SaveConfig = true
 
 [Peer]
